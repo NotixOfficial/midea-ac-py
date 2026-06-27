@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from msmart.device import AirConditioner as AC
 from msmart.device import CommercialAirConditioner as CC
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -157,3 +158,56 @@ async def test_cc_purifier_no_switch(
 
     entry = entity_registry.async_get(entity_id)
     assert entry is None
+
+
+async def test_fresh_air_switch(
+        hass: HomeAssistant,
+        entity_registry: er.EntityRegistry,
+        mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an AC device that supports fresh air creates a fresh air switch."""
+
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a dummy AC device and force fresh air support
+    mock_device = AC("0.0.0.0", 0, 0)
+    mock_device._online = True
+    mock_device.power_state = True
+    mock_device._capabilities.set(AC.Capability.FRESH_AIR, True)
+
+    # Create a mock coordinator
+    coordinator = MagicMock(spec=MideaDeviceUpdateCoordinator)
+    coordinator.device = mock_device
+    coordinator.apply = AsyncMock()
+
+    # Store coordinator in global data
+    hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = coordinator
+
+    # Setup climate (to name the device) and switch platforms
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry, [Platform.CLIMATE]
+    )
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry, [Platform.SWITCH]
+    )
+    await hass.async_block_till_done()
+
+    # Verify fresh air switch exists and is off by default
+    entity_id = "switch.midea_ac_0_fresh_air"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "0-fresh_air"
+
+    # Turning the switch on should set the device property and apply
+    await hass.services.async_call(
+        Platform.SWITCH, "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+    assert mock_device.fresh_air is True
+    coordinator.apply.assert_awaited()

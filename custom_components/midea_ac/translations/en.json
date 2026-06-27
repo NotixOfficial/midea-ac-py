@@ -228,6 +228,15 @@
           "down": "Down"
         }
       },
+      "fresh_air_fan_speed": {
+        "name": "Fresh air fan speed",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "boost": "Boost"
+        }
+      },
       "horizontal_swing_angle": {
         "name": "Horizontal swing angle",
         "state": {
@@ -327,6 +336,9 @@
       },
       "flash_cool": {
         "name": "Flash cool"
+      },
+      "fresh_air": {
+        "name": "Fresh air"
       },
       "out_silent": {
         "name": "Outdoor silent mode"

@@ -44,6 +44,9 @@ async def async_setup_entry(
     if hasattr(device, "breezeless") and getattr(device, "supports_breezeless", False):
         entities.append(MideaSwitch(coordinator, "breezeless"))
 
+    if hasattr(device, "fresh_air") and getattr(device, "supports_fresh_air", False):
+        entities.append(MideaSwitch(coordinator, "fresh_air"))
+
     if hasattr(device, "flash_cool") and getattr(device, "supports_flash_cool", False):
         entities.append(MideaSwitch(coordinator, "flash_cool"))
 

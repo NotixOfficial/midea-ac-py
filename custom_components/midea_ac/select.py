@@ -53,6 +53,14 @@ async def async_setup_entry(
                                         options=supported_rates
                                         ))
 
+    if hasattr(device, "fresh_air_fan_speed") and getattr(device, "supports_fresh_air", False):
+        entities.append(MideaEnumSelect(coordinator,
+                                        "fresh_air_fan_speed",
+                                        device.FreshAirFanSpeed,
+                                        options=getattr(
+                                            device, "supported_fresh_air_fan_speeds", [])
+                                        ))
+
     supported_aux_modes = getattr(device, "supported_aux_modes", [])
     if hasattr(device, "aux_mode") and len(supported_aux_modes) > 1:
         entities.append(MideaEnumSelect(coordinator,
